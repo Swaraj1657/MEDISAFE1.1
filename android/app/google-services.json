@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "732365774876",
+    "project_id": "med-safe-invictus-2025",
+    "storage_bucket": "med-safe-invictus-2025.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:732365774876:android:fb64719689de0cb7bf3fd9",
+        "android_client_info": {
+          "package_name": "com.example.med_app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCuFg_mDdI1RQ6unYPtM5-cM5XoPTfNT0s"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
