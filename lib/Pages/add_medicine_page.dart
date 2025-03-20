@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:med_app/config.dart';
+import 'package:med_app/models/medicine.dart';
 import 'package:med_app/widgets/llm_button.dart';
 import 'medicine_schedule_page.dart';
 // import '../widgets/bottom_nav_bar.dart';

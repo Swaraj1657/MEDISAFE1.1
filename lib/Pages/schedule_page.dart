@@ -37,6 +37,10 @@ class _SchedulePageState extends State<SchedulePage> {
     _selectedDate = DateTime.now();
     _scrollController = ScrollController();
     _generateDates();
+    // Initialize medication service
+    _medicationService.initialize();
+    // Listen to medication changes
+    _medicationService.addListener(_onMedicationServiceChanged);
     // Wait for the widget to be built before scrolling
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _scrollToCurrentDate();
@@ -46,11 +50,22 @@ class _SchedulePageState extends State<SchedulePage> {
   @override
   void dispose() {
     _scrollController.dispose();
+    // Remove the listener when disposing
+    _medicationService.removeListener(_onMedicationServiceChanged);
     // Cancel all active timers
     for (var timer in _undoTimers.values) {
       timer.cancel();
     }
     super.dispose();
+  }
+
+  // Called when medication service notifies of changes
+  void _onMedicationServiceChanged() {
+    if (mounted) {
+      setState(() {
+        // This will rebuild the UI with updated medication statuses
+      });
+    }
   }
 
   void _generateDates() {
@@ -517,22 +532,22 @@ class _SchedulePageState extends State<SchedulePage> {
 
   void _navigateToAddMedicine(int timeSlotIndex) async {
     try {
-    final result = await Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder:
-            (context) => AddMedicinePage(
-              timeSlotIndex: timeSlotIndex,
+      final result = await Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder:
+              (context) => AddMedicinePage(
+                timeSlotIndex: timeSlotIndex,
                 timeSlotName: _timeSlots[timeSlotIndex],
-              date: _selectedDate,
-            ),
-      ),
-    );
+                date: _selectedDate,
+              ),
+        ),
+      );
 
       if (result != null && result is Medicine) {
-      setState(() {
-        _medicationService.addMedication(result);
-      });
+        setState(() {
+          _medicationService.addMedication(result);
+        });
         _showSnackBar(
           'Medicine ${result.name} added successfully',
           backgroundColor: const Color(0xFF4CAF50),

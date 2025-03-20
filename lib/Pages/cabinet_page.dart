@@ -38,21 +38,24 @@ class _CabinetPageState extends State<CabinetPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.grey[100],
+      backgroundColor: Colors.black,
       body: ListView.builder(
         padding: const EdgeInsets.all(16),
         itemCount: _categories.length,
         itemBuilder: (context, index) {
           final category = _categories[index];
           return Card(
+            color: Colors.grey[600],
             margin: const EdgeInsets.only(bottom: 16),
             child: ExpansionTile(
+              backgroundColor: Colors.black87,
               leading: Icon(category['icon'] as IconData, color: Colors.blue),
               title: Text(
                 category['title'] as String,
                 style: const TextStyle(
                   fontWeight: FontWeight.bold,
                   fontSize: 16,
+                  color: Colors.white,
                 ),
               ),
               children: [
@@ -62,7 +65,7 @@ class _CabinetPageState extends State<CabinetPage> {
                     child: Text(
                       'No items added yet',
                       style: TextStyle(
-                        color: Colors.grey,
+                        color: Colors.red,
                         fontStyle: FontStyle.italic,
                       ),
                     ),

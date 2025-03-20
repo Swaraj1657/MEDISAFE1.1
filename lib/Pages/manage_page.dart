@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:med_app/Pages/fileupload.dart';
 import 'package:med_app/Pages/health_tracker_page.dart';
+import 'package:med_app/Pages/health_page.dart';
 import 'package:med_app/Pages/prescrptions.dart';
 import 'package:med_app/Pages/doctor_appointments.dart';
 import 'package:med_app/Pages/healthNotes.dart';
@@ -14,6 +15,12 @@ class ManagePage extends StatefulWidget {
 
 class _ManagePageState extends State<ManagePage> {
   final List<Map<String, dynamic>> _features = [
+    // {
+    //   'icon': Icons.person_outline,
+    //   'title': 'Personal Health Info',
+    //   'subtitle': 'Manage your personal health information',
+    //   'color': Colors.indigo,
+    // },
     {
       'icon': Icons.monitor_heart,
       'title': 'Health Trackers & Measurements',
@@ -108,6 +115,12 @@ class _ManagePageState extends State<ManagePage> {
                     ),
                   );
                 }
+                // if (feature['title'] == 'Personal Health Info') {
+                //   Navigator.push(
+                //     context,
+                //     MaterialPageRoute(builder: (context) => const HealthPage()),
+                //   );
+                // }
                 if (feature['title'] == 'Prescriptions') {
                   Navigator.push(
                     context,

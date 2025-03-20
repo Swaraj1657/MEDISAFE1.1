@@ -51,11 +51,13 @@ class MedicationService extends ChangeNotifier {
   // Convert Medicine to JSON string
   String _medicineToJson(Medicine medicine) {
     return jsonEncode({
+      'id': medicine.id,
       'name': medicine.name,
       'timeSlotIndex': medicine.timeSlotIndex,
       'startDate': medicine.startDate.toIso8601String(),
       'endDate': medicine.endDate?.toIso8601String(),
       'doseHistory': medicine.doseHistory,
+      'missedHistory': medicine.missedHistory,
       'frequency': medicine.frequency,
       'timesPerDay': medicine.timesPerDay,
       'time':
@@ -70,11 +72,13 @@ class MedicationService extends ChangeNotifier {
   Medicine _medicineFromJson(String jsonString) {
     final Map<String, dynamic> json = jsonDecode(jsonString);
     return Medicine(
+      id: json['id'],
       name: json['name'],
       timeSlotIndex: json['timeSlotIndex'],
       startDate: DateTime.parse(json['startDate']),
       endDate: json['endDate'] != null ? DateTime.parse(json['endDate']) : null,
       doseHistory: Map<String, bool>.from(json['doseHistory'] ?? {}),
+      missedHistory: Map<String, bool>.from(json['missedHistory'] ?? {}),
       frequency: json['frequency'],
       timesPerDay: json['timesPerDay'],
       time:
@@ -303,5 +307,47 @@ class MedicationService extends ChangeNotifier {
         'Invalid time slot index',
       );
     }
+  }
+
+  // Find medicine by ID and mark it as taken
+  Future<void> markMedicineAsTakenById(String id) async {
+    // Find the medicine with the given ID
+    final medicine = _medications.firstWhere(
+      (med) => med.id == id,
+      orElse:
+          () =>
+              throw MedicationError(
+                MedicationError.MEDICINE_NOT_FOUND,
+                'Medicine not found with ID: $id',
+              ),
+    );
+
+    // Mark the medicine as taken for today
+    final now = DateTime.now();
+    medicine.setTakenStatus(now, true);
+
+    // Save the updated status
+    await _saveMedications();
+  }
+
+  // Find medicine by ID and mark it as missed
+  Future<void> markMedicineMissedById(String id) async {
+    // Find the medicine with the given ID
+    final medicine = _medications.firstWhere(
+      (med) => med.id == id,
+      orElse:
+          () =>
+              throw MedicationError(
+                MedicationError.MEDICINE_NOT_FOUND,
+                'Medicine not found with ID: $id',
+              ),
+    );
+
+    // Mark the medicine as missed for today
+    final now = DateTime.now();
+    medicine.setMissedStatus(now, true);
+
+    // Save the updated status
+    await _saveMedications();
   }
 }

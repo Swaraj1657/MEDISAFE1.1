@@ -1,34 +1,47 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-class HealthTrackerPage extends StatefulWidget {
-  const HealthTrackerPage({super.key});
+class HealthPage extends StatefulWidget {
+  const HealthPage({super.key});
 
   @override
-  State<HealthTrackerPage> createState() => _HealthTrackerPageState();
+  State<HealthPage> createState() => _HealthPageState();
 }
 
-class _HealthTrackerPageState extends State<HealthTrackerPage> {
-  final _formKey = GlobalKey<FormState>();
+class _HealthPageState extends State<HealthPage> {
   late SharedPreferences _prefs;
+  final _formKey = GlobalKey<FormState>();
 
   // Health Data
-  double? height; // in cm
-  double? weight; // in kg
-  int? heartRate;
-  String? bloodGroup;
-  List<String> medicalConditions = [];
-  double? bmi;
-  String bmiStatus = '';
+  String? _name;
+  int? _age;
+  String? _gender;
+  String? _phoneNumber;
+  String? _emergencyContact;
+  String? _address;
+  String? _allergies;
+  String? _currentMedications;
+  String? _bloodGroup;
+  double? _height; // in cm
+  double? _weight; // in kg
+  double? _bmi;
+  String _bmiStatus = '';
+  String _bmiMessage = '';
 
   // Controllers
+  final _nameController = TextEditingController();
+  final _ageController = TextEditingController();
+  final _phoneController = TextEditingController();
+  final _emergencyController = TextEditingController();
+  final _addressController = TextEditingController();
+  final _allergiesController = TextEditingController();
+  final _medicationsController = TextEditingController();
   final _heightController = TextEditingController();
   final _weightController = TextEditingController();
-  final _heartRateController = TextEditingController();
-  final _conditionController = TextEditingController();
 
-  // Blood Group Options
-  final List<String> bloodGroups = [
+  // Options
+  final List<String> _genders = ['Male', 'Female', 'Other'];
+  final List<String> _bloodGroups = [
     'A+',
     'A-',
     'B+',
@@ -49,35 +62,52 @@ class _HealthTrackerPageState extends State<HealthTrackerPage> {
     _prefs = await SharedPreferences.getInstance();
 
     setState(() {
-      height = _prefs.getDouble('height');
-      weight = _prefs.getDouble('weight');
-      heartRate = _prefs.getInt('heartRate');
-      bloodGroup = _prefs.getString('bloodGroup') ?? bloodGroups[0];
-      medicalConditions = _prefs.getStringList('medicalConditions') ?? [];
+      _name = _prefs.getString('name');
+      _age = _prefs.getInt('age');
+      _gender = _prefs.getString('gender') ?? _genders[0];
+      _phoneNumber = _prefs.getString('phoneNumber');
+      _emergencyContact = _prefs.getString('emergencyContact');
+      _address = _prefs.getString('address');
+      _allergies = _prefs.getString('allergies');
+      _currentMedications = _prefs.getString('currentMedications');
+      _bloodGroup = _prefs.getString('bloodGroup') ?? _bloodGroups[0];
+      _height = _prefs.getDouble('height');
+      _weight = _prefs.getDouble('weight');
 
       // Update controllers with saved values
-      if (height != null) _heightController.text = height.toString();
-      if (weight != null) _weightController.text = weight.toString();
-      if (heartRate != null) _heartRateController.text = heartRate.toString();
+      if (_name != null) _nameController.text = _name!;
+      if (_age != null) _ageController.text = _age.toString();
+      if (_phoneNumber != null) _phoneController.text = _phoneNumber!;
+      if (_emergencyContact != null)
+        _emergencyController.text = _emergencyContact!;
+      if (_address != null) _addressController.text = _address!;
+      if (_allergies != null) _allergiesController.text = _allergies!;
+      if (_currentMedications != null)
+        _medicationsController.text = _currentMedications!;
+      if (_height != null) _heightController.text = _height.toString();
+      if (_weight != null) _weightController.text = _weight.toString();
 
-      // Calculate BMI if height and weight are available
-      if (height != null && weight != null) {
-        calculateBMI();
-      }
+      calculateBMI();
     });
   }
 
   Future<void> _saveHealthData({bool showMessage = false}) async {
-    await _prefs.setDouble('height', height ?? 0.0);
-    await _prefs.setDouble('weight', weight ?? 0.0);
-    await _prefs.setInt('heartRate', heartRate ?? 0);
-    await _prefs.setString('bloodGroup', bloodGroup ?? bloodGroups[0]);
-    await _prefs.setStringList('medicalConditions', medicalConditions);
+    await _prefs.setString('name', _name ?? '');
+    await _prefs.setInt('age', _age ?? 0);
+    await _prefs.setString('gender', _gender ?? _genders[0]);
+    await _prefs.setString('phoneNumber', _phoneNumber ?? '');
+    await _prefs.setString('emergencyContact', _emergencyContact ?? '');
+    await _prefs.setString('address', _address ?? '');
+    await _prefs.setString('allergies', _allergies ?? '');
+    await _prefs.setString('currentMedications', _currentMedications ?? '');
+    await _prefs.setString('bloodGroup', _bloodGroup ?? _bloodGroups[0]);
+    await _prefs.setDouble('height', _height ?? 0.0);
+    await _prefs.setDouble('weight', _weight ?? 0.0);
 
     if (showMessage) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: const Text('Health data saved successfully!'),
+          content: const Text('Health information saved successfully!'),
           backgroundColor: Colors.green.shade600,
           behavior: SnackBarBehavior.floating,
           shape: RoundedRectangleBorder(
@@ -89,20 +119,26 @@ class _HealthTrackerPageState extends State<HealthTrackerPage> {
   }
 
   void calculateBMI() {
-    if (height != null && weight != null) {
+    if (_height != null && _weight != null) {
       // BMI = weight(kg) / (height(m))²
-      double heightInMeters = height! / 100;
-      bmi = weight! / (heightInMeters * heightInMeters);
+      double heightInMeters = _height! / 100;
+      _bmi = _weight! / (heightInMeters * heightInMeters);
 
       // Determine BMI Status
-      if (bmi! < 18.5) {
-        bmiStatus = 'Underweight';
-      } else if (bmi! < 25) {
-        bmiStatus = 'Normal';
-      } else if (bmi! < 30) {
-        bmiStatus = 'Overweight';
+      if (_bmi! < 18.5) {
+        _bmiStatus = 'Underweight';
+        _bmiMessage =
+            'Consider consulting a healthcare provider about healthy weight gain.';
+      } else if (_bmi! < 25) {
+        _bmiStatus = 'Normal';
+        _bmiMessage = 'Your BMI is within the healthy range!';
+      } else if (_bmi! < 30) {
+        _bmiStatus = 'Overweight';
+        _bmiMessage = 'Consider lifestyle changes for a healthier BMI range.';
       } else {
-        bmiStatus = 'Obese';
+        _bmiStatus = 'Obese';
+        _bmiMessage =
+            'Please consult a healthcare provider about weight management.';
       }
 
       setState(() {});
@@ -150,13 +186,13 @@ class _HealthTrackerPageState extends State<HealthTrackerPage> {
                     child: const Row(
                       children: [
                         Icon(
-                          Icons.health_and_safety,
+                          Icons.person_outline,
                           color: Colors.white,
                           size: 32,
                         ),
                         SizedBox(width: 12),
                         Text(
-                          'Health Trackers',
+                          'Personal Health Information',
                           style: TextStyle(
                             fontSize: 24,
                             fontWeight: FontWeight.bold,
@@ -168,7 +204,118 @@ class _HealthTrackerPageState extends State<HealthTrackerPage> {
                   ),
                   const SizedBox(height: 24),
 
-                  // Basic Measurements Card
+                  // Personal Information Card
+                  Card(
+                    elevation: 8,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(15),
+                    ),
+                    child: Container(
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(15),
+                        gradient: LinearGradient(
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                          colors: [Colors.white, Colors.blue.shade50],
+                        ),
+                      ),
+                      child: Padding(
+                        padding: const EdgeInsets.all(20.0),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Row(
+                              children: [
+                                Icon(Icons.person, color: Colors.blue.shade700),
+                                const SizedBox(width: 8),
+                                const Text(
+                                  'Personal Information',
+                                  style: TextStyle(
+                                    fontSize: 18,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 20),
+                            TextFormField(
+                              controller: _nameController,
+                              decoration: InputDecoration(
+                                labelText: 'Full Name',
+                                border: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(10),
+                                ),
+                                prefixIcon: const Icon(Icons.person_outline),
+                                filled: true,
+                                fillColor: Colors.white,
+                              ),
+                              onChanged: (value) {
+                                _name = value;
+                                _saveHealthData(showMessage: false);
+                              },
+                            ),
+                            const SizedBox(height: 16),
+                            Row(
+                              children: [
+                                Expanded(
+                                  child: TextFormField(
+                                    controller: _ageController,
+                                    keyboardType: TextInputType.number,
+                                    decoration: InputDecoration(
+                                      labelText: 'Age',
+                                      border: OutlineInputBorder(
+                                        borderRadius: BorderRadius.circular(10),
+                                      ),
+                                      prefixIcon: const Icon(
+                                        Icons.calendar_today,
+                                      ),
+                                      filled: true,
+                                      fillColor: Colors.white,
+                                    ),
+                                    onChanged: (value) {
+                                      _age = int.tryParse(value);
+                                      _saveHealthData(showMessage: false);
+                                    },
+                                  ),
+                                ),
+                                const SizedBox(width: 16),
+                                Expanded(
+                                  child: DropdownButtonFormField<String>(
+                                    value: _gender,
+                                    decoration: InputDecoration(
+                                      labelText: 'Gender',
+                                      border: OutlineInputBorder(
+                                        borderRadius: BorderRadius.circular(10),
+                                      ),
+                                      prefixIcon: const Icon(Icons.people),
+                                      filled: true,
+                                      fillColor: Colors.white,
+                                    ),
+                                    items:
+                                        _genders.map((String gender) {
+                                          return DropdownMenuItem<String>(
+                                            value: gender,
+                                            child: Text(gender),
+                                          );
+                                        }).toList(),
+                                    onChanged: (String? newValue) {
+                                      setState(() {
+                                        _gender = newValue;
+                                        _saveHealthData(showMessage: false);
+                                      });
+                                    },
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+
+                  // Physical Measurements Card
                   Card(
                     elevation: 8,
                     shape: RoundedRectangleBorder(
@@ -196,7 +343,7 @@ class _HealthTrackerPageState extends State<HealthTrackerPage> {
                                 ),
                                 const SizedBox(width: 8),
                                 const Text(
-                                  'Basic Measurements',
+                                  'Physical Measurements',
                                   style: TextStyle(
                                     fontSize: 18,
                                     fontWeight: FontWeight.bold,
@@ -221,7 +368,7 @@ class _HealthTrackerPageState extends State<HealthTrackerPage> {
                                       fillColor: Colors.white,
                                     ),
                                     onChanged: (value) {
-                                      height = double.tryParse(value);
+                                      _height = double.tryParse(value);
                                       calculateBMI();
                                       _saveHealthData(showMessage: false);
                                     },
@@ -242,13 +389,42 @@ class _HealthTrackerPageState extends State<HealthTrackerPage> {
                                       fillColor: Colors.white,
                                     ),
                                     onChanged: (value) {
-                                      weight = double.tryParse(value);
+                                      _weight = double.tryParse(value);
                                       calculateBMI();
                                       _saveHealthData(showMessage: false);
                                     },
                                   ),
                                 ),
                               ],
+                            ),
+                            const SizedBox(height: 16),
+                            DropdownButtonFormField<String>(
+                              value: _bloodGroup,
+                              decoration: InputDecoration(
+                                labelText: 'Blood Group',
+                                border: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(10),
+                                ),
+                                prefixIcon: Icon(
+                                  Icons.bloodtype,
+                                  color: Colors.red.shade400,
+                                ),
+                                filled: true,
+                                fillColor: Colors.white,
+                              ),
+                              items:
+                                  _bloodGroups.map((String group) {
+                                    return DropdownMenuItem<String>(
+                                      value: group,
+                                      child: Text(group),
+                                    );
+                                  }).toList(),
+                              onChanged: (String? newValue) {
+                                setState(() {
+                                  _bloodGroup = newValue;
+                                  _saveHealthData(showMessage: false);
+                                });
+                              },
                             ),
                           ],
                         ),
@@ -258,7 +434,7 @@ class _HealthTrackerPageState extends State<HealthTrackerPage> {
                   const SizedBox(height: 16),
 
                   // BMI Results Card
-                  if (bmi != null)
+                  if (_bmi != null)
                     Card(
                       elevation: 8,
                       shape: RoundedRectangleBorder(
@@ -299,7 +475,7 @@ class _HealthTrackerPageState extends State<HealthTrackerPage> {
                               ),
                               const SizedBox(height: 16),
                               Text(
-                                'BMI: ${bmi!.toStringAsFixed(1)}',
+                                'BMI: ${_bmi!.toStringAsFixed(1)}',
                                 style: const TextStyle(
                                   fontSize: 32,
                                   fontWeight: FontWeight.bold,
@@ -307,7 +483,7 @@ class _HealthTrackerPageState extends State<HealthTrackerPage> {
                                 ),
                               ),
                               Text(
-                                bmiStatus,
+                                _bmiStatus,
                                 style: const TextStyle(
                                   fontSize: 24,
                                   color: Colors.white,
@@ -315,7 +491,7 @@ class _HealthTrackerPageState extends State<HealthTrackerPage> {
                               ),
                               const SizedBox(height: 8),
                               Text(
-                                _getBMIMessage(),
+                                _bmiMessage,
                                 style: const TextStyle(
                                   fontSize: 14,
                                   color: Colors.white70,
@@ -329,7 +505,7 @@ class _HealthTrackerPageState extends State<HealthTrackerPage> {
                     ),
                   const SizedBox(height: 16),
 
-                  // Vital Signs Card
+                  // Contact Information Card
                   Card(
                     elevation: 8,
                     shape: RoundedRectangleBorder(
@@ -352,12 +528,12 @@ class _HealthTrackerPageState extends State<HealthTrackerPage> {
                             Row(
                               children: [
                                 Icon(
-                                  Icons.favorite,
-                                  color: Colors.red.shade400,
+                                  Icons.contact_phone,
+                                  color: Colors.blue.shade700,
                                 ),
                                 const SizedBox(width: 8),
                                 const Text(
-                                  'Vital Signs',
+                                  'Contact Information',
                                   style: TextStyle(
                                     fontSize: 18,
                                     fontWeight: FontWeight.bold,
@@ -367,53 +543,56 @@ class _HealthTrackerPageState extends State<HealthTrackerPage> {
                             ),
                             const SizedBox(height: 20),
                             TextFormField(
-                              controller: _heartRateController,
-                              keyboardType: TextInputType.number,
+                              controller: _phoneController,
+                              keyboardType: TextInputType.phone,
                               decoration: InputDecoration(
-                                labelText: 'Heart Rate (bpm)',
+                                labelText: 'Phone Number',
                                 border: OutlineInputBorder(
                                   borderRadius: BorderRadius.circular(10),
                                 ),
-                                prefixIcon: Icon(
-                                  Icons.favorite,
-                                  color: Colors.red.shade400,
-                                ),
+                                prefixIcon: const Icon(Icons.phone),
                                 filled: true,
                                 fillColor: Colors.white,
                               ),
                               onChanged: (value) {
-                                heartRate = int.tryParse(value);
-                                setState(() {});
+                                _phoneNumber = value;
                                 _saveHealthData(showMessage: false);
                               },
                             ),
                             const SizedBox(height: 16),
-                            DropdownButtonFormField<String>(
-                              value: bloodGroup,
+                            TextFormField(
+                              controller: _emergencyController,
+                              keyboardType: TextInputType.phone,
                               decoration: InputDecoration(
-                                labelText: 'Blood Group',
+                                labelText: 'Emergency Contact',
                                 border: OutlineInputBorder(
                                   borderRadius: BorderRadius.circular(10),
                                 ),
-                                prefixIcon: Icon(
-                                  Icons.bloodtype,
-                                  color: Colors.red.shade400,
-                                ),
+                                prefixIcon: const Icon(Icons.emergency),
                                 filled: true,
                                 fillColor: Colors.white,
                               ),
-                              items:
-                                  bloodGroups.map((String group) {
-                                    return DropdownMenuItem<String>(
-                                      value: group,
-                                      child: Text(group),
-                                    );
-                                  }).toList(),
-                              onChanged: (String? newValue) {
-                                setState(() {
-                                  bloodGroup = newValue;
-                                  _saveHealthData(showMessage: false);
-                                });
+                              onChanged: (value) {
+                                _emergencyContact = value;
+                                _saveHealthData(showMessage: false);
+                              },
+                            ),
+                            const SizedBox(height: 16),
+                            TextFormField(
+                              controller: _addressController,
+                              maxLines: 3,
+                              decoration: InputDecoration(
+                                labelText: 'Address',
+                                border: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(10),
+                                ),
+                                prefixIcon: const Icon(Icons.location_on),
+                                filled: true,
+                                fillColor: Colors.white,
+                              ),
+                              onChanged: (value) {
+                                _address = value;
+                                _saveHealthData(showMessage: false);
                               },
                             ),
                           ],
@@ -423,7 +602,7 @@ class _HealthTrackerPageState extends State<HealthTrackerPage> {
                   ),
                   const SizedBox(height: 16),
 
-                  // Medical Conditions Card
+                  // Medical Information Card
                   Card(
                     elevation: 8,
                     shape: RoundedRectangleBorder(
@@ -451,7 +630,7 @@ class _HealthTrackerPageState extends State<HealthTrackerPage> {
                                 ),
                                 const SizedBox(width: 8),
                                 const Text(
-                                  'Medical Conditions',
+                                  'Medical Information',
                                   style: TextStyle(
                                     fontSize: 18,
                                     fontWeight: FontWeight.bold,
@@ -460,73 +639,40 @@ class _HealthTrackerPageState extends State<HealthTrackerPage> {
                               ],
                             ),
                             const SizedBox(height: 20),
-                            Row(
-                              children: [
-                                Expanded(
-                                  child: TextFormField(
-                                    controller: _conditionController,
-                                    decoration: InputDecoration(
-                                      labelText: 'Add Medical Condition',
-                                      border: OutlineInputBorder(
-                                        borderRadius: BorderRadius.circular(10),
-                                      ),
-                                      prefixIcon: const Icon(
-                                        Icons.medical_services,
-                                      ),
-                                      filled: true,
-                                      fillColor: Colors.white,
-                                    ),
-                                  ),
+                            TextFormField(
+                              controller: _allergiesController,
+                              maxLines: 3,
+                              decoration: InputDecoration(
+                                labelText: 'Allergies',
+                                border: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(10),
                                 ),
-                                const SizedBox(width: 8),
-                                Container(
-                                  decoration: BoxDecoration(
-                                    color: Colors.blue.shade700,
-                                    borderRadius: BorderRadius.circular(10),
-                                  ),
-                                  child: IconButton(
-                                    icon: const Icon(
-                                      Icons.add,
-                                      color: Colors.white,
-                                    ),
-                                    onPressed: () {
-                                      if (_conditionController
-                                          .text
-                                          .isNotEmpty) {
-                                        setState(() {
-                                          medicalConditions.add(
-                                            _conditionController.text,
-                                          );
-                                          _conditionController.clear();
-                                          _saveHealthData(showMessage: false);
-                                        });
-                                      }
-                                    },
-                                  ),
-                                ),
-                              ],
+                                prefixIcon: const Icon(Icons.warning),
+                                filled: true,
+                                fillColor: Colors.white,
+                              ),
+                              onChanged: (value) {
+                                _allergies = value;
+                                _saveHealthData(showMessage: false);
+                              },
                             ),
                             const SizedBox(height: 16),
-                            Wrap(
-                              spacing: 8,
-                              runSpacing: 8,
-                              children:
-                                  medicalConditions.map((condition) {
-                                    return Chip(
-                                      label: Text(condition),
-                                      backgroundColor: Colors.blue.shade100,
-                                      deleteIcon: const Icon(
-                                        Icons.close,
-                                        size: 16,
-                                      ),
-                                      onDeleted: () {
-                                        setState(() {
-                                          medicalConditions.remove(condition);
-                                          _saveHealthData(showMessage: false);
-                                        });
-                                      },
-                                    );
-                                  }).toList(),
+                            TextFormField(
+                              controller: _medicationsController,
+                              maxLines: 3,
+                              decoration: InputDecoration(
+                                labelText: 'Current Medications',
+                                border: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(10),
+                                ),
+                                prefixIcon: const Icon(Icons.medication),
+                                filled: true,
+                                fillColor: Colors.white,
+                              ),
+                              onChanged: (value) {
+                                _currentMedications = value;
+                                _saveHealthData(showMessage: false);
+                              },
                             ),
                           ],
                         ),
@@ -554,7 +700,7 @@ class _HealthTrackerPageState extends State<HealthTrackerPage> {
   }
 
   List<Color> _getBMIGradientColors() {
-    switch (bmiStatus) {
+    switch (_bmiStatus) {
       case 'Normal':
         return [Colors.green.shade400, Colors.green.shade600];
       case 'Underweight':
@@ -567,7 +713,7 @@ class _HealthTrackerPageState extends State<HealthTrackerPage> {
   }
 
   IconData _getBMIIcon() {
-    switch (bmiStatus) {
+    switch (_bmiStatus) {
       case 'Normal':
         return Icons.check_circle;
       case 'Underweight':
@@ -579,25 +725,17 @@ class _HealthTrackerPageState extends State<HealthTrackerPage> {
     }
   }
 
-  String _getBMIMessage() {
-    switch (bmiStatus) {
-      case 'Normal':
-        return 'Your BMI is within the healthy range!';
-      case 'Underweight':
-        return 'Consider consulting a healthcare provider about healthy weight gain.';
-      case 'Overweight':
-        return 'Consider lifestyle changes for a healthier BMI range.';
-      default:
-        return 'Please consult a healthcare provider about weight management.';
-    }
-  }
-
   @override
   void dispose() {
+    _nameController.dispose();
+    _ageController.dispose();
+    _phoneController.dispose();
+    _emergencyController.dispose();
+    _addressController.dispose();
+    _allergiesController.dispose();
+    _medicationsController.dispose();
     _heightController.dispose();
     _weightController.dispose();
-    _heartRateController.dispose();
-    _conditionController.dispose();
     super.dispose();
   }
 }

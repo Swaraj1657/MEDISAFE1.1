@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:med_app/Pages/add_medicine_page.dart';
 import 'package:med_app/services/notification_service.dart';
 import '../models/medicine.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 // import 'package:flutter_alarm_clock/flutter_alarm_clock.dart';
-
-class NotificationService {}
 
 class MedicineSchedulePage extends StatefulWidget {
   final String medicationName;
@@ -489,24 +489,44 @@ class _MedicineSchedulePageState extends State<MedicineSchedulePage> {
       return;
     }
 
-    // Create a medicine object with schedule information
-    final medicine = Medicine(
-      name: widget.medicationName,
-      timeSlotIndex: widget.timeSlotIndex,
-      startDate: _startDate,
-      endDate: _endDate,
-      frequency: _selectedFrequency,
-      timesPerDay: _selectedTimesPerDay,
-      time: _selectedTime,
-      dosage: _dosage,
-    );
+    try {
+      // Create a unique ID for the medicine schedule
+      final scheduleId =
+          '${widget.medicationName}_${DateTime.now().millisecondsSinceEpoch}';
 
-    // setCustomAlarm();
-    WidgetsFlutterBinding.ensureInitialized();
-    await NotificationHelper.initializeNotifications();
-    // NotificationHelper.sendInstantNotification();
-    NotificationHelper.scheduleDailyMedicationReminder(clockHr, clockMin);
-    // Return to previous screen with the medicine
-    Navigator.pop(context, medicine);
+      // Create a medicine object with schedule information
+      final medicine = Medicine(
+        name: widget.medicationName,
+        timeSlotIndex: widget.timeSlotIndex,
+        startDate: _startDate,
+        endDate: _endDate,
+        frequency: _selectedFrequency,
+        timesPerDay: _selectedTimesPerDay,
+        time: _selectedTime,
+        dosage: _dosage,
+        id: scheduleId, // Add ID to medicine object
+      );
+
+      // Initialize notifications
+      WidgetsFlutterBinding.ensureInitialized();
+      await NotificationHelper.initializeNotifications();
+
+      // Schedule notification with the medicine ID
+      NotificationHelper.scheduleDailyMedicationReminder(
+        clockHr,
+        clockMin,
+        medicine.name,
+        scheduleId, // Use the generated ID
+      );
+
+      Navigator.pop(context, medicine);
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Error saving medicine schedule: ${e.toString()}'),
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
   }
 }
