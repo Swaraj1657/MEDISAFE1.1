@@ -1,4 +1,4 @@
-# med_app
+# MEDISAFE
 
 A new Flutter project.
 
